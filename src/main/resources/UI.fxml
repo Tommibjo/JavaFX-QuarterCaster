@@ -1,53 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.chart.*?>
-<?import javafx.scene.text.*?>
 <?import java.lang.*?>
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="724.0" prefWidth="988.0" tabClosingPolicy="UNAVAILABLE" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="com.mycompany.quartercaster.Controller">
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="724.0" prefWidth="988.0" tabClosingPolicy="UNAVAILABLE" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="com.mycompany.quartercaster.Controller">
   <tabs>
     <Tab closable="false" text="Forecast">
-         <content>
-            <SplitPane dividerPositions="0.29797979797979796" prefHeight="160.0" prefWidth="200.0">
-              <items>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                     <children>
-                        <TextFlow layoutX="3.0" layoutY="115.0" prefHeight="570.0" prefWidth="285.0" />
-                        <Button fx:id="dataInput" layoutX="106.0" layoutY="19.0" mnemonicParsing="false" onAction="#selectInput" text="Add input" />
-                        <Label fx:id="inputFile" layoutX="32.0" layoutY="64.0" prefHeight="21.0" prefWidth="217.0" />
-                     </children>
-                  </AnchorPane>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                     <children>
-                        <SplitPane dividerPositions="0.6550218340611353" layoutY="-3.0" orientation="VERTICAL" prefHeight="689.0" prefWidth="688.0">
-                          <items>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="389.0" prefWidth="686.0">
-                                 <children>
-                                    <LineChart layoutX="-6.0" layoutY="-1.0" prefHeight="443.0" prefWidth="690.0">
-                                      <xAxis>
-                                        <CategoryAxis side="BOTTOM" />
-                                      </xAxis>
-                                      <yAxis>
-                                        <NumberAxis side="LEFT" />
-                                      </yAxis>
-                                    </LineChart>
-                                 </children>
-                              </AnchorPane>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="301.0" prefWidth="686.0" />
-                          </items>
-                        </SplitPane>
-                     </children>
-                  </AnchorPane>
-              </items>
-            </SplitPane>
-         </content>
+      <content>
+        <SplitPane dividerPositions="0.29817444219066935" prefHeight="160.0" prefWidth="200.0">
+          <items>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+              <children>
+                <TextFlow layoutX="3.0" layoutY="115.0" prefHeight="570.0" prefWidth="285.0" />
+                <Button fx:id="dataInput" layoutX="106.0" layoutY="19.0" mnemonicParsing="false" onAction="#selectInput" text="Add input" />
+                <Label fx:id="inputFile" layoutX="32.0" layoutY="64.0" prefHeight="21.0" prefWidth="217.0" />
+                <ListView fx:id="productList" layoutX="32.0" layoutY="85.0" prefHeight="579.0" prefWidth="217.0" />
+                <Label fx:id="total" layoutX="93.0" layoutY="669.0" prefWidth="73.0" text="" />
+              </children>
+            </AnchorPane>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+              <children>
+                <SplitPane dividerPositions="0.6550218340611353" layoutY="-3.0" orientation="VERTICAL" prefHeight="689.0" prefWidth="688.0">
+                  <items>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="389.0" prefWidth="686.0">
+                      <children>
+                        <LineChart layoutX="-6.0" layoutY="-1.0" prefHeight="443.0" prefWidth="690.0">
+                          <xAxis>
+                            <CategoryAxis side="BOTTOM" />
+                          </xAxis>
+                          <yAxis>
+                            <NumberAxis side="LEFT" />
+                          </yAxis>
+                        </LineChart>
+                      </children>
+                    </AnchorPane>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="301.0" prefWidth="686.0" />
+                  </items>
+                </SplitPane>
+              </children>
+            </AnchorPane>
+          </items>
+        </SplitPane>
+      </content>
     </Tab>
-      <Tab closable="false" text="Log">
-         <content>
-            <ListView fx:id="log" prefHeight="200.0" prefWidth="200.0" />
-         </content>
-      </Tab>
+    <Tab closable="false" text="Log">
+      <content>
+        <ListView fx:id="log" prefHeight="200.0" prefWidth="200.0" />
+      </content>
+    </Tab>
   </tabs>
 </TabPane>
