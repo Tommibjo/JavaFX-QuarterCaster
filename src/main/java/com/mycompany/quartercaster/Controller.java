@@ -14,9 +14,12 @@ import java.util.Iterator;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.annotation.PostConstruct;
@@ -27,8 +30,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -36,20 +37,24 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class Controller {
 
-    @Autowired
-    BeanFactory beanFactory;
     @FXML
     private Label inputFile;
     @FXML
     private Label total;
     @FXML
     private ListView<String> log;
-    private ObservableList<String> items;
+    private ObservableList<String> logLine;
     @FXML
-    private ListView<String> productList;
-    private ObservableList<String> codeItems;
+    private ListView<Shipment> productList;
+    private ObservableList<Shipment> codeItems;
 
-    private Text logText;
+    @FXML
+    private CategoryAxis xAxis;
+    @FXML
+    private NumberAxis yAxis;
+    @FXML
+    private LineChart<Number, Number> forecastVisual;
+
     private CodeReader codeReader;
     private FileChooser fileChooser;
     private ArrayList<Shipment> shipments;
@@ -57,10 +62,10 @@ public class Controller {
 
     public Controller() {
         this.log = new ListView<>();
-        this.items = FXCollections.observableArrayList();
+        this.logLine = FXCollections.observableArrayList();
         this.productList = new ListView<>();
         this.codeItems = FXCollections.observableArrayList();
-        this.logText = new Text();
+
         this.codeReader = new CodeReader(); // Olio koodien lukemiseen koodit.txt tiedostosta.
         this.fileChooser = new FileChooser();
         this.shipments = new ArrayList<>();
@@ -73,8 +78,8 @@ public class Controller {
         // Lukee koodit.txt tiedostosta löytyvät tuotekoodit. Näitä käytetään InputFilestä löytyvien koodien validiuden tarkistamiseen.
          */
         String fileReading = this.codeReader.readCodes();
-        this.items.add(fileReading);
-        this.log.setItems(items);
+        this.logLine.add(fileReading);
+        this.log.setItems(logLine);
     }
 
     @PostConstruct
@@ -89,7 +94,7 @@ public class Controller {
         File selectedFile = this.fileChooser.showOpenDialog(new Stage());
         this.inputFile.setText("Sales from " + selectedFile.getName() + " found with:");
         // Print the chosen file to log
-        this.items.add("-> Selected file: " + selectedFile.getName());
+        this.logLine.add("-> Selected file: " + selectedFile.getName());
 
         try {
             Workbook workbook = WorkbookFactory.create(selectedFile);
@@ -114,8 +119,8 @@ public class Controller {
                             if (this.codeReader.checkCode(dataFormatter.formatCellValue(currentCell)) == true) {
                                 String date = dataFormatter.formatCellValue(deliveryCell);
                                 double quantity = Double.parseDouble(dataFormatter.formatCellValue(deliveredQuantity).replaceAll(",", "."));
-                                if (this.shipments.contains(new Shipment(dataFormatter.formatCellValue(currentCell)))) {
-                                    for (Shipment shipment : this.shipments) {
+                                if (this.codeItems.contains(new Shipment(dataFormatter.formatCellValue(currentCell)))) {
+                                    for (Shipment shipment : this.codeItems) {
                                         if (shipment.equals(new Shipment(dataFormatter.formatCellValue(currentCell)))) {
                                             shipment.addDelivery(date, quantity);
                                         }
@@ -123,8 +128,7 @@ public class Controller {
                                 } else {
                                     Shipment shipment = new Shipment(dataFormatter.formatCellValue(currentCell));
                                     shipment.addDelivery(date, quantity);
-                                    this.shipments.add(shipment);
-                                    this.codeItems.add(dataFormatter.formatCellValue(currentCell));
+                                    this.codeItems.add(shipment);
                                     this.codesTotal++;
                                 }
                             }
@@ -134,16 +138,29 @@ public class Controller {
                 }
             }
             this.total.setText(this.codesTotal + " products");
-            System.out.println(this.shipments);
-            this.items.add("-> Found " + this.codesTotal + " different products");
-            this.log.setItems(this.items);
+            System.out.println(this.codeItems);
+            this.logLine.add("-> Found " + this.codesTotal + " different products");
+            this.log.setItems(this.logLine);
             this.productList.setItems(this.codeItems);
         } catch (IOException ioe) {
-            this.items.add("ERROR IOException: " + ioe.getMessage());
-            this.log.setItems(this.items);
+            this.logLine.add("ERROR IOException: " + ioe.getMessage());
+            this.log.setItems(this.logLine);
         } catch (InvalidFormatException ife) {
-            this.items.add("ERROR InvalidFormatException error: " + ife.getMessage());
-            this.log.setItems(this.items);
+            this.logLine.add("ERROR InvalidFormatException error: " + ife.getMessage());
+            this.log.setItems(this.logLine);
         }
     }
+
+    @FXML
+    public void showData() {
+        Shipment shipment = this.productList.getSelectionModel().getSelectedItem();
+        System.out.println("Clicked on: " + shipment);
+        this.xAxis.setLabel("Time");
+        this.yAxis.setLabel("Kg");
+        XYChart.Series series = new XYChart.Series();
+        shipment.getDelivery().forEach((key,value) -> series.getData().add(new XYChart.Data(key,value)));
+        this.forecastVisual.getData().add(series);
+        this.forecastVisual.setTitle(this.productList.getSelectionModel().getSelectedItems() + " Forecast");
+    }
+
 }

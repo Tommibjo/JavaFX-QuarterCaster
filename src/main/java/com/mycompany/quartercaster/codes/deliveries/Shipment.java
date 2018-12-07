@@ -34,6 +34,14 @@ public class Shipment {
         this.productCode = productCode;
     }
 
+    public HashMap<String, Double> getDelivery() {
+        return delivery;
+    }
+
+    public void setDelivery(HashMap<String, Double> delivery) {
+        this.delivery = delivery;
+    }
+
     @Override
     public int hashCode() {
         int hash = 5;
@@ -61,6 +69,6 @@ public class Shipment {
 
     @Override
     public String toString() {
-        return "Shipment{" + "productCode=" + productCode + ", delivery=" + delivery + '}';
+        return productCode;
     }
 }

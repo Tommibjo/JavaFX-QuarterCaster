@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="724.0" prefWidth="988.0" tabClosingPolicy="UNAVAILABLE" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="com.mycompany.quartercaster.Controller">
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="724.0" prefWidth="988.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mycompany.quartercaster.Controller">
   <tabs>
     <Tab closable="false" text="Forecast">
       <content>
@@ -17,7 +17,7 @@
                 <TextFlow layoutX="3.0" layoutY="115.0" prefHeight="570.0" prefWidth="285.0" />
                 <Button fx:id="dataInput" layoutX="106.0" layoutY="19.0" mnemonicParsing="false" onAction="#selectInput" text="Add input" />
                 <Label fx:id="inputFile" layoutX="32.0" layoutY="64.0" prefHeight="21.0" prefWidth="217.0" />
-                <ListView fx:id="productList" layoutX="32.0" layoutY="85.0" prefHeight="579.0" prefWidth="217.0" />
+                <ListView fx:id="productList" layoutX="32.0" layoutY="85.0" onMouseClicked="#showData" prefHeight="579.0" prefWidth="217.0" />
                 <Label fx:id="total" layoutX="93.0" layoutY="669.0" prefWidth="73.0" text="" />
               </children>
             </AnchorPane>
@@ -27,12 +27,12 @@
                   <items>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="389.0" prefWidth="686.0">
                       <children>
-                        <LineChart layoutX="-6.0" layoutY="-1.0" prefHeight="443.0" prefWidth="690.0">
+                        <LineChart fx:id="forecastVisual" layoutX="-6.0" layoutY="-1.0" prefHeight="443.0" prefWidth="690.0">
                           <xAxis>
-                            <CategoryAxis side="BOTTOM" />
+                            <CategoryAxis side="BOTTOM" fx:id="xAxis" />
                           </xAxis>
                           <yAxis>
-                            <NumberAxis side="LEFT" />
+                            <NumberAxis fx:id="yAxis" side="LEFT" />
                           </yAxis>
                         </LineChart>
                       </children>
