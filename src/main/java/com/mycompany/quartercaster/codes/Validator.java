@@ -6,7 +6,6 @@
 package com.mycompany.quartercaster.codes;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -14,11 +13,11 @@ import java.util.Scanner;
  *
  * @author Tommi
  */
-public class CodeReader {
+public class Validator {
 
     private ArrayList<String> codes;
 
-    public CodeReader() {
+    public Validator() {
         this.codes = new ArrayList<>();
     }
 
@@ -34,7 +33,7 @@ public class CodeReader {
         return "-> koodit.txt loaded to QuarterCaster";
     }
 
-    public boolean checkCode(String code) {
+    public boolean foundFromList(String code) {
         return this.codes.contains(code);
     }
 

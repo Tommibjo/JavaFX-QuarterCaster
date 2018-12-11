@@ -15,11 +15,21 @@ import java.util.Objects;
 public class Shipment {
 
     private String productCode;
+    private String productName;
     private HashMap<String, Double> delivery;
 
-    public Shipment(String productCode) {
+    public Shipment(String productCode, String productName) {
         this.productCode = productCode;
+        this.productName = productName;
         this.delivery = new HashMap<>();
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
     
     public void addDelivery(String date, double quantity ){

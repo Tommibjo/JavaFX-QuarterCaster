@@ -26,16 +26,16 @@
                 <SplitPane dividerPositions="0.6550218340611353" layoutY="-3.0" orientation="VERTICAL" prefHeight="689.0" prefWidth="688.0">
                   <items>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="389.0" prefWidth="686.0">
-                      <children>
-                        <LineChart fx:id="forecastVisual" layoutX="-6.0" layoutY="-1.0" prefHeight="443.0" prefWidth="690.0">
-                          <xAxis>
-                            <CategoryAxis side="BOTTOM" fx:id="xAxis" />
-                          </xAxis>
-                          <yAxis>
-                            <NumberAxis fx:id="yAxis" side="LEFT" />
-                          </yAxis>
-                        </LineChart>
-                      </children>
+                                 <children>
+                                    <BarChart fx:id="forecastVisual" layoutX="14.0" layoutY="17.0" prefHeight="412.0" prefWidth="639.0">
+                                      <xAxis>
+                                        <CategoryAxis side="BOTTOM" fx:id="xAxis" />
+                                      </xAxis>
+                                      <yAxis>
+                                        <NumberAxis fx:id="yAxis" side="LEFT" />
+                                      </yAxis>
+                                    </BarChart>
+                                 </children>
                     </AnchorPane>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="301.0" prefWidth="686.0" />
                   </items>

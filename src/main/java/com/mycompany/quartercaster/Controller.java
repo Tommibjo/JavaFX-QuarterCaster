@@ -5,7 +5,7 @@
  */
 package com.mycompany.quartercaster;
 
-import com.mycompany.quartercaster.codes.CodeReader;
+import com.mycompany.quartercaster.codes.Validator;
 import com.mycompany.quartercaster.codes.deliveries.Shipment;
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +14,8 @@ import java.util.Iterator;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
@@ -46,30 +46,38 @@ public class Controller {
     private ObservableList<String> logLine;
     @FXML
     private ListView<Shipment> productList;
-    private ObservableList<Shipment> codeItems;
+    private ObservableList<Shipment> Shipments;
 
     @FXML
     private CategoryAxis xAxis;
     @FXML
     private NumberAxis yAxis;
     @FXML
-    private LineChart<Number, Number> forecastVisual;
+    private BarChart<Number, Number> forecastVisual;
 
-    private CodeReader codeReader;
+    private Validator validator;
     private FileChooser fileChooser;
     private ArrayList<Shipment> shipments;
     private int codesTotal;
+
+    // These are used to check if BarChart should be cleared (Click on a new item -> clears the screen)
+    // Could have been done better .. perhaps this will get refactored later :)
+    private int newClick;
+    private int lastClick;
 
     public Controller() {
         this.log = new ListView<>();
         this.logLine = FXCollections.observableArrayList();
         this.productList = new ListView<>();
-        this.codeItems = FXCollections.observableArrayList();
+        this.Shipments = FXCollections.observableArrayList();
 
-        this.codeReader = new CodeReader(); // Olio koodien lukemiseen koodit.txt tiedostosta.
+        this.validator = new Validator(); // Olio koodien lukemiseen koodit.txt tiedostosta.
         this.fileChooser = new FileChooser();
         this.shipments = new ArrayList<>();
         this.codesTotal = 0;
+
+        this.newClick = 0;
+        this.lastClick = 0;
     }
 
     @FXML
@@ -77,7 +85,7 @@ public class Controller {
         /*
         // Lukee koodit.txt tiedostosta löytyvät tuotekoodit. Näitä käytetään InputFilestä löytyvien koodien validiuden tarkistamiseen.
          */
-        String fileReading = this.codeReader.readCodes();
+        String fileReading = this.validator.readCodes();
         this.logLine.add(fileReading);
         this.log.setItems(logLine);
     }
@@ -108,27 +116,24 @@ public class Controller {
                 Iterator<Cell> cellIterator = row.cellIterator();
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
-
                     // Jos "Nimiketunnus" sarake löytyy, niin iteroi siitä alespäin nimiketunnukset läpi
                     if (dataFormatter.formatCellValue(cell).equals("Nimiketunnus")) {
                         for (int i = cell.getRowIndex(); i < sheet.getLastRowNum(); i++) {
-                            Cell currentCell = workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex());
-                            Cell deliveryCell = workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 3);
-                            Cell deliveredQuantity = workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 5);
-                            // Jos solu löytyy codeReaderin ArrayListista, niin tällöin solun koodi on ennustamiseen validi 
-                            if (this.codeReader.checkCode(dataFormatter.formatCellValue(currentCell)) == true) {
-                                String date = dataFormatter.formatCellValue(deliveryCell);
-                                double quantity = Double.parseDouble(dataFormatter.formatCellValue(deliveredQuantity).replaceAll(",", "."));
-                                if (this.codeItems.contains(new Shipment(dataFormatter.formatCellValue(currentCell)))) {
-                                    for (Shipment shipment : this.codeItems) {
-                                        if (shipment.equals(new Shipment(dataFormatter.formatCellValue(currentCell)))) {
-                                            shipment.addDelivery(date, quantity);
+                            String currentCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex()));
+                            if (this.validator.foundFromList(currentCell) == true) {
+                                String nameCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 1));
+                                String deliveryCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 3));
+                                double deliveryQuantity = Double.parseDouble(dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 5)).replaceAll(",", "."));
+                                if (this.Shipments.contains(new Shipment(currentCell, nameCell))) {
+                                    for (Shipment shipment : this.Shipments) {
+                                        if (shipment.equals(new Shipment(currentCell, nameCell))) {
+                                            shipment.addDelivery(deliveryCell, deliveryQuantity);
                                         }
                                     }
                                 } else {
-                                    Shipment shipment = new Shipment(dataFormatter.formatCellValue(currentCell));
-                                    shipment.addDelivery(date, quantity);
-                                    this.codeItems.add(shipment);
+                                    Shipment shipment = new Shipment(currentCell, nameCell);
+                                    shipment.addDelivery(deliveryCell, deliveryQuantity);
+                                    this.Shipments.add(shipment);
                                     this.codesTotal++;
                                 }
                             }
@@ -138,10 +143,10 @@ public class Controller {
                 }
             }
             this.total.setText(this.codesTotal + " products");
-            System.out.println(this.codeItems);
+            System.out.println(this.Shipments);
             this.logLine.add("-> Found " + this.codesTotal + " different products");
             this.log.setItems(this.logLine);
-            this.productList.setItems(this.codeItems);
+            this.productList.setItems(this.Shipments);
         } catch (IOException ioe) {
             this.logLine.add("ERROR IOException: " + ioe.getMessage());
             this.log.setItems(this.logLine);
@@ -153,14 +158,21 @@ public class Controller {
 
     @FXML
     public void showData() {
+
+        if (this.newClick > this.lastClick) {
+            this.forecastVisual.getData().clear();
+        }
         Shipment shipment = this.productList.getSelectionModel().getSelectedItem();
         System.out.println("Clicked on: " + shipment);
         this.xAxis.setLabel("Time");
         this.yAxis.setLabel("Kg");
         XYChart.Series series = new XYChart.Series();
-        shipment.getDelivery().forEach((key,value) -> series.getData().add(new XYChart.Data(key,value)));
+        series.setName(shipment.getProductName());
+        shipment.getDelivery().forEach((key, value) -> series.getData().add(new XYChart.Data(key, value)));
         this.forecastVisual.getData().add(series);
         this.forecastVisual.setTitle(this.productList.getSelectionModel().getSelectedItems() + " Forecast");
+        this.lastClick = this.newClick;
+        this.newClick++;
     }
 
 }
