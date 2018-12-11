@@ -9,7 +9,11 @@ import com.mycompany.quartercaster.codes.Validator;
 import com.mycompany.quartercaster.codes.deliveries.Shipment;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -65,6 +69,9 @@ public class Controller {
     private int newClick;
     private int lastClick;
 
+    private int startWeek;
+    private int endWeek;
+    
     public Controller() {
         this.log = new ListView<>();
         this.logLine = FXCollections.observableArrayList();
@@ -78,6 +85,8 @@ public class Controller {
 
         this.newClick = 0;
         this.lastClick = 0;
+        this.startWeek = 0;
+        this.endWeek = 0;
     }
 
     @FXML
@@ -96,7 +105,7 @@ public class Controller {
     }
 
     @FXML
-    public void selectInput() throws IOException, InvalidFormatException {
+    public void selectInput() throws IOException, InvalidFormatException, ParseException {
 
         // Choose the file -popup
         File selectedFile = this.fileChooser.showOpenDialog(new Stage());
@@ -117,6 +126,26 @@ public class Controller {
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
                     // Jos "Nimiketunnus" sarake löytyy, niin iteroi siitä alespäin nimiketunnukset läpi
+                    if (dataFormatter.formatCellValue(cell).equals("Toimituspvm")){
+                        String timeFrame = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(row.getRowNum()).getCell(cell.getColumnIndex() + 1));
+                        String[] timeFrameSplitted = timeFrame.split("-");
+                        String start = timeFrameSplitted[0].replaceAll("\\s+","").replaceAll("\\.", "/");
+                        String end = timeFrameSplitted[1].replaceAll("\\s+","").replaceAll("\\.", "/");;
+                        
+                        String format = "dd/MM/yyyy";
+                        SimpleDateFormat df = new SimpleDateFormat(format);
+                        Date startDate = df.parse(start);
+                        Date endDate = df.parse(end);
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(startDate);
+                        this.startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+                        cal.setTime(endDate);
+                        this.endWeek = cal.get(Calendar.WEEK_OF_YEAR);
+                        System.out.println("Start week: " + startWeek + " " + df.format(startDate));
+                        System.out.println("End week: " + endWeek + " " + df.format(endDate));
+  
+     
+                    }
                     if (dataFormatter.formatCellValue(cell).equals("Nimiketunnus")) {
                         for (int i = cell.getRowIndex(); i < sheet.getLastRowNum(); i++) {
                             String currentCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex()));
