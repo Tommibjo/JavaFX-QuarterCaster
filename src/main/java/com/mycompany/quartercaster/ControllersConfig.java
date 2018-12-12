@@ -25,8 +25,8 @@ public class ControllersConfig {
     }
 
     @Bean
-    public Controller getMainController() throws IOException {
-        return (Controller) getMainView().getController();
+    public FxController getMainController() throws IOException {
+        return (FxController) getMainView().getController();
     }
 
     protected View loadView(String url) throws IOException {

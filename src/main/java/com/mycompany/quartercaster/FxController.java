@@ -5,8 +5,9 @@
  */
 package com.mycompany.quartercaster;
 
-import com.mycompany.quartercaster.codes.Validator;
-import com.mycompany.quartercaster.codes.deliveries.Shipment;
+import com.mycompany.quartercaster.model.ExcelReader;
+import com.mycompany.quartercaster.model.Validator;
+import com.mycompany.quartercaster.model.deliveries.Shipment;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -24,8 +25,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -33,12 +32,21 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 
 /**
  *
  * @author tommib
  */
-public class Controller {
+@Controller
+public class FxController {
+
+    @Autowired
+    private ExcelReader excelReader;
+    
+    @Autowired
+    private Validator validate;
 
     @FXML
     private Label inputFile;
@@ -58,8 +66,6 @@ public class Controller {
     @FXML
     private BarChart<Number, Number> forecastVisual;
 
-    private Validator validator;
-    private FileChooser fileChooser;
     private ArrayList<Shipment> shipments;
     private int codesTotal;
     private ArrayList<String> weeks;
@@ -69,30 +75,27 @@ public class Controller {
     private int newClick;
     private int lastClick;
 
-    public Controller() {
+    public FxController() {
         this.log = new ListView<>();
         this.logLine = FXCollections.observableArrayList();
         this.productList = new ListView<>();
         this.Shipments = FXCollections.observableArrayList();
 
-        this.validator = new Validator(); // Olio koodien lukemiseen koodit.txt tiedostosta.
-        this.fileChooser = new FileChooser();
+        //       this.fileChooser = new FileChooser();
         this.shipments = new ArrayList<>();
         this.codesTotal = 0;
 
         this.newClick = 0;
         this.lastClick = 0;
         this.weeks = new ArrayList<>();
+        this.validate.uploadCodes();
 
     }
 
     @FXML
     public void initialize() {
-        /*
-        // Lukee koodit.txt tiedostosta löytyvät tuotekoodit. Näitä käytetään InputFilestä löytyvien koodien validiuden tarkistamiseen.
-         */
-        String result = this.validator.readCodes();
-        this.logLine.add(result);
+//        String result = this.validate.uploadCodes();
+      //  this.logLine.add(result);
         this.log.setItems(logLine);
     }
 
@@ -100,7 +103,7 @@ public class Controller {
     public void selectInput() throws IOException, InvalidFormatException, ParseException {
 
         // Choose the file -popup
-        File selectedFile = this.fileChooser.showOpenDialog(new Stage());
+        File selectedFile = this.excelReader.selectFile();
         this.inputFile.setText("Sales from " + selectedFile.getName() + " found with:");
         // Print the chosen file to log
         this.logLine.add("-> Selected file: " + selectedFile.getName());
@@ -148,7 +151,7 @@ public class Controller {
                     if (dataFormatter.formatCellValue(cell).equals("Nimiketunnus")) {
                         for (int i = cell.getRowIndex(); i < sheet.getLastRowNum(); i++) {
                             String currentCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex()));
-                            if (this.validator.foundFromList(currentCell) == true) {
+                            if (this.validate.foundFromList(currentCell) == true) {
                                 String nameCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 1));
                                 String deliveryCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 3));
                                 double deliveryQuantity = Double.parseDouble(dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 5)).replaceAll(",", "."));
