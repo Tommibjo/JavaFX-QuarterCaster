@@ -26,7 +26,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javax.annotation.PostConstruct;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -92,14 +91,9 @@ public class Controller {
         /*
         // Lukee koodit.txt tiedostosta löytyvät tuotekoodit. Näitä käytetään InputFilestä löytyvien koodien validiuden tarkistamiseen.
          */
-        String fileReading = this.validator.readCodes();
-        this.logLine.add(fileReading);
+        String result = this.validator.readCodes();
+        this.logLine.add(result);
         this.log.setItems(logLine);
-    }
-
-    @PostConstruct
-    public void init() {
-
     }
 
     @FXML
@@ -178,7 +172,7 @@ public class Controller {
             }
             this.total.setText(this.codesTotal + " products");
             System.out.println(this.Shipments);
-            this.logLine.add("-> Found " + this.codesTotal + " different products");
+            this.logLine.add("-> Found total " + this.codesTotal + " products which match the codes within 'koodit.txt'");
             this.log.setItems(this.logLine);
             this.productList.setItems(this.Shipments);
         } catch (IOException ioe) {
@@ -209,7 +203,6 @@ public class Controller {
                 series.getData().add(new XYChart.Data(this.weeks.get(i), 0));
             }
         }
-// shipment.getDelivery().forEach((key, value) -> series.getData().add(new XYChart.Data(key, value)));
         this.forecastVisual.getData().add(series);
         this.forecastVisual.setTitle(this.productList.getSelectionModel().getSelectedItems() + " Forecast");
         this.lastClick = this.newClick;
