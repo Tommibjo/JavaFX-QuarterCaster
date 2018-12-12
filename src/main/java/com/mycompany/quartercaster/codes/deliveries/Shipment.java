@@ -5,6 +5,10 @@
  */
 package com.mycompany.quartercaster.codes.deliveries;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -31,9 +35,17 @@ public class Shipment {
     public void setProductName(String productName) {
         this.productName = productName;
     }
-    
-    public void addDelivery(String date, double quantity ){
-        this.delivery.put(date, quantity);
+
+    public void addDelivery(String date, double quantity) throws ParseException {
+        System.out.println(date);
+        Calendar cal = Calendar.getInstance();
+        String format = "MM/dd/yyyy";
+        SimpleDateFormat df = new SimpleDateFormat(format);
+        Date deliveryDate = df.parse(date);
+        cal.setTime(deliveryDate);
+        int deliveryWeek = cal.get(Calendar.WEEK_OF_YEAR);
+        System.out.println("Delivery week: " + deliveryWeek + " quantity: " + quantity);
+        this.delivery.put(Integer.toString(deliveryWeek), quantity);
     }
 
     public String getProductCode() {

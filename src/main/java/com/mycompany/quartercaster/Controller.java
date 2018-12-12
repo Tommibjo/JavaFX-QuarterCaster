@@ -63,15 +63,13 @@ public class Controller {
     private FileChooser fileChooser;
     private ArrayList<Shipment> shipments;
     private int codesTotal;
+    private ArrayList<String> weeks;
 
     // These are used to check if BarChart should be cleared (Click on a new item -> clears the screen)
     // Could have been done better .. perhaps this will get refactored later :)
     private int newClick;
     private int lastClick;
 
-    private int startWeek;
-    private int endWeek;
-    
     public Controller() {
         this.log = new ListView<>();
         this.logLine = FXCollections.observableArrayList();
@@ -85,8 +83,8 @@ public class Controller {
 
         this.newClick = 0;
         this.lastClick = 0;
-        this.startWeek = 0;
-        this.endWeek = 0;
+        this.weeks = new ArrayList<>();
+
     }
 
     @FXML
@@ -126,25 +124,32 @@ public class Controller {
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
                     // Jos "Nimiketunnus" sarake löytyy, niin iteroi siitä alespäin nimiketunnukset läpi
-                    if (dataFormatter.formatCellValue(cell).equals("Toimituspvm")){
+                    if (dataFormatter.formatCellValue(cell).equals("Toimituspvm")) {
                         String timeFrame = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(row.getRowNum()).getCell(cell.getColumnIndex() + 1));
                         String[] timeFrameSplitted = timeFrame.split("-");
-                        String start = timeFrameSplitted[0].replaceAll("\\s+","").replaceAll("\\.", "/");
-                        String end = timeFrameSplitted[1].replaceAll("\\s+","").replaceAll("\\.", "/");;
-                        
+                        String start = timeFrameSplitted[0].replaceAll("\\s+", "").replaceAll("\\.", "/");
+                        String end = timeFrameSplitted[1].replaceAll("\\s+", "").replaceAll("\\.", "/");;
+
                         String format = "dd/MM/yyyy";
                         SimpleDateFormat df = new SimpleDateFormat(format);
                         Date startDate = df.parse(start);
                         Date endDate = df.parse(end);
+
                         Calendar cal = Calendar.getInstance();
+                        int startWeek = 0;
+                        int endWeek = 0;
                         cal.setTime(startDate);
-                        this.startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+                        startWeek = cal.get(Calendar.WEEK_OF_YEAR);
                         cal.setTime(endDate);
-                        this.endWeek = cal.get(Calendar.WEEK_OF_YEAR);
-                        System.out.println("Start week: " + startWeek + " " + df.format(startDate));
-                        System.out.println("End week: " + endWeek + " " + df.format(endDate));
-  
-     
+                        endWeek = cal.get(Calendar.WEEK_OF_YEAR);
+                        System.out.println("Start week: " + startWeek);
+                        System.out.println("End week: " + endWeek);
+
+                        while (startWeek <= endWeek) {
+                            this.weeks.add(Integer.toString(startWeek));
+                            startWeek++;
+                        }
+
                     }
                     if (dataFormatter.formatCellValue(cell).equals("Nimiketunnus")) {
                         for (int i = cell.getRowIndex(); i < sheet.getLastRowNum(); i++) {
@@ -193,11 +198,18 @@ public class Controller {
         }
         Shipment shipment = this.productList.getSelectionModel().getSelectedItem();
         System.out.println("Clicked on: " + shipment);
-        this.xAxis.setLabel("Time");
+        this.xAxis.setLabel("Week");
         this.yAxis.setLabel("Kg");
         XYChart.Series series = new XYChart.Series();
         series.setName(shipment.getProductName());
-        shipment.getDelivery().forEach((key, value) -> series.getData().add(new XYChart.Data(key, value)));
+        for (int i = 0; i < this.weeks.size(); i++) {
+            if (shipment.getDelivery().containsKey(this.weeks.get(i))) {
+                series.getData().add(new XYChart.Data(this.weeks.get(i), shipment.getDelivery().get(this.weeks.get(i))));
+            } else {
+                series.getData().add(new XYChart.Data(this.weeks.get(i), 0));
+            }
+        }
+// shipment.getDelivery().forEach((key, value) -> series.getData().add(new XYChart.Data(key, value)));
         this.forecastVisual.getData().add(series);
         this.forecastVisual.setTitle(this.productList.getSelectionModel().getSelectedItems() + " Forecast");
         this.lastClick = this.newClick;
