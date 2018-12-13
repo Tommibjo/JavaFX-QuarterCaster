@@ -6,16 +6,11 @@
 package com.mycompany.quartercaster;
 
 import com.mycompany.quartercaster.model.ExcelReader;
-import com.mycompany.quartercaster.model.Validator;
+
 import com.mycompany.quartercaster.model.deliveries.Shipment;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -26,165 +21,53 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 
 /**
  *
  * @author tommib
  */
-@Controller
 public class FxController {
 
     @Autowired
     private ExcelReader excelReader;
-    
-    @Autowired
-    private Validator validate;
 
     @FXML
     private Label inputFile;
     @FXML
-    private Label total;
-    @FXML
     private ListView<String> log;
     private ObservableList<String> logLine;
     @FXML
-    private ListView<Shipment> productList;
-    private ObservableList<Shipment> Shipments;
-
+    private ListView<Shipment> shipment;
     @FXML
     private CategoryAxis xAxis;
     @FXML
     private NumberAxis yAxis;
     @FXML
     private BarChart<Number, Number> forecastVisual;
-
-    private ArrayList<Shipment> shipments;
-    private int codesTotal;
-    private ArrayList<String> weeks;
-
-    // These are used to check if BarChart should be cleared (Click on a new item -> clears the screen)
-    // Could have been done better .. perhaps this will get refactored later :)
+    @FXML
+    private Label total;
     private int newClick;
     private int lastClick;
 
     public FxController() {
         this.log = new ListView<>();
         this.logLine = FXCollections.observableArrayList();
-        this.productList = new ListView<>();
-        this.Shipments = FXCollections.observableArrayList();
-
-        //       this.fileChooser = new FileChooser();
-        this.shipments = new ArrayList<>();
-        this.codesTotal = 0;
-
+        this.shipment = new ListView<>();
         this.newClick = 0;
         this.lastClick = 0;
-        this.weeks = new ArrayList<>();
-        this.validate.uploadCodes();
 
-    }
-
-    @FXML
-    public void initialize() {
-//        String result = this.validate.uploadCodes();
-      //  this.logLine.add(result);
-        this.log.setItems(logLine);
     }
 
     @FXML
     public void selectInput() throws IOException, InvalidFormatException, ParseException {
-
-        // Choose the file -popup
         File selectedFile = this.excelReader.selectFile();
+        ObservableList<Shipment> shipments = this.excelReader.iterateSelectedFile();
+        this.shipment.setItems(shipments);
         this.inputFile.setText("Sales from " + selectedFile.getName() + " found with:");
-        // Print the chosen file to log
         this.logLine.add("-> Selected file: " + selectedFile.getName());
-
-        try {
-            Workbook workbook = WorkbookFactory.create(selectedFile);
-            Sheet sheet = workbook.getSheetAt(0);
-            DataFormatter dataFormatter = new DataFormatter();
-            Iterator<Row> rowIterator = sheet.rowIterator();
-
-            // Iteroi koko exceliä läpi
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
-                Iterator<Cell> cellIterator = row.cellIterator();
-                while (cellIterator.hasNext()) {
-                    Cell cell = cellIterator.next();
-                    // Jos "Nimiketunnus" sarake löytyy, niin iteroi siitä alespäin nimiketunnukset läpi
-                    if (dataFormatter.formatCellValue(cell).equals("Toimituspvm")) {
-                        String timeFrame = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(row.getRowNum()).getCell(cell.getColumnIndex() + 1));
-                        String[] timeFrameSplitted = timeFrame.split("-");
-                        String start = timeFrameSplitted[0].replaceAll("\\s+", "").replaceAll("\\.", "/");
-                        String end = timeFrameSplitted[1].replaceAll("\\s+", "").replaceAll("\\.", "/");;
-
-                        String format = "dd/MM/yyyy";
-                        SimpleDateFormat df = new SimpleDateFormat(format);
-                        Date startDate = df.parse(start);
-                        Date endDate = df.parse(end);
-
-                        Calendar cal = Calendar.getInstance();
-                        int startWeek = 0;
-                        int endWeek = 0;
-                        cal.setTime(startDate);
-                        startWeek = cal.get(Calendar.WEEK_OF_YEAR);
-                        cal.setTime(endDate);
-                        endWeek = cal.get(Calendar.WEEK_OF_YEAR);
-                        System.out.println("Start week: " + startWeek);
-                        System.out.println("End week: " + endWeek);
-
-                        while (startWeek <= endWeek) {
-                            this.weeks.add(Integer.toString(startWeek));
-                            startWeek++;
-                        }
-
-                    }
-                    if (dataFormatter.formatCellValue(cell).equals("Nimiketunnus")) {
-                        for (int i = cell.getRowIndex(); i < sheet.getLastRowNum(); i++) {
-                            String currentCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex()));
-                            if (this.validate.foundFromList(currentCell) == true) {
-                                String nameCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 1));
-                                String deliveryCell = dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 3));
-                                double deliveryQuantity = Double.parseDouble(dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(i).getCell(cell.getColumnIndex() + 5)).replaceAll(",", "."));
-                                if (this.Shipments.contains(new Shipment(currentCell, nameCell))) {
-                                    for (Shipment shipment : this.Shipments) {
-                                        if (shipment.equals(new Shipment(currentCell, nameCell))) {
-                                            shipment.addDelivery(deliveryCell, deliveryQuantity);
-                                        }
-                                    }
-                                } else {
-                                    Shipment shipment = new Shipment(currentCell, nameCell);
-                                    shipment.addDelivery(deliveryCell, deliveryQuantity);
-                                    this.Shipments.add(shipment);
-                                    this.codesTotal++;
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-            this.total.setText(this.codesTotal + " products");
-            System.out.println(this.Shipments);
-            this.logLine.add("-> Found total " + this.codesTotal + " products which match the codes within 'koodit.txt'");
-            this.log.setItems(this.logLine);
-            this.productList.setItems(this.Shipments);
-        } catch (IOException ioe) {
-            this.logLine.add("ERROR IOException: " + ioe.getMessage());
-            this.log.setItems(this.logLine);
-        } catch (InvalidFormatException ife) {
-            this.logLine.add("ERROR InvalidFormatException error: " + ife.getMessage());
-            this.log.setItems(this.logLine);
-        }
+        this.total.setText("with " + this.excelReader.getCodesTotal() + " products");
+        this.log.setItems(logLine);
     }
 
     @FXML
@@ -193,23 +76,22 @@ public class FxController {
         if (this.newClick > this.lastClick) {
             this.forecastVisual.getData().clear();
         }
-        Shipment shipment = this.productList.getSelectionModel().getSelectedItem();
+        Shipment shipment = this.shipment.getSelectionModel().getSelectedItem();
         System.out.println("Clicked on: " + shipment);
         this.xAxis.setLabel("Week");
         this.yAxis.setLabel("Kg");
         XYChart.Series series = new XYChart.Series();
         series.setName(shipment.getProductName());
-        for (int i = 0; i < this.weeks.size(); i++) {
-            if (shipment.getDelivery().containsKey(this.weeks.get(i))) {
-                series.getData().add(new XYChart.Data(this.weeks.get(i), shipment.getDelivery().get(this.weeks.get(i))));
+        for (int i = 0; i < this.excelReader.getWeeks().size(); i++) {
+            if (shipment.getDelivery().containsKey(this.excelReader.getWeeks().get(i))) {
+                series.getData().add(new XYChart.Data(this.excelReader.getWeeks().get(i), shipment.getDelivery().get(this.excelReader.getWeeks().get(i))));
             } else {
-                series.getData().add(new XYChart.Data(this.weeks.get(i), 0));
+                series.getData().add(new XYChart.Data(this.excelReader.getWeeks().get(i), 0));
             }
         }
         this.forecastVisual.getData().add(series);
-        this.forecastVisual.setTitle(this.productList.getSelectionModel().getSelectedItems() + " Forecast");
+        this.forecastVisual.setTitle(this.shipment.getSelectionModel().getSelectedItems() + " Forecast");
         this.lastClick = this.newClick;
         this.newClick++;
     }
-
 }

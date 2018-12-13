@@ -8,6 +8,8 @@ package com.mycompany.quartercaster.model;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.annotation.PostConstruct;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
  * @author Tommi
  */
 @Configuration
-@Service
 public class Validator {
 
     private ArrayList<String> codes;
@@ -29,6 +30,7 @@ public class Validator {
     /*
     Uploads wanted codes to softwares memory.
     */  
+    @PostConstruct
     public String uploadCodes() {
         try (Scanner scanner = new Scanner(new File("koodit.txt"))) {
             while (scanner.hasNextLine()) {
