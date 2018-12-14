@@ -5,6 +5,7 @@
  */
 package com.mycompany.quartercaster.model;
 
+import com.mycompany.quartercaster.FxController;
 import com.mycompany.quartercaster.model.deliveries.Shipment;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,8 @@ import org.springframework.stereotype.Service;
 public class ExcelReader {
 
     @Autowired
+    private FxController fxController;
+    @Autowired
     private Validator validate;
     private ArrayList<String> weeks;
     private FileChooser chooser;
@@ -43,6 +46,7 @@ public class ExcelReader {
     private int codesTotal;
     private ObservableList<Shipment> Shipments;
 
+    
     public ExcelReader() {
         this.chooser = new FileChooser();
         this.weeks = new ArrayList<>();
@@ -123,17 +127,15 @@ public class ExcelReader {
 
                 }
             }
-            //        this.total.setText(this.codesTotal + " products");
-            System.out.println(this.Shipments);
-            //         this.logLine.add("-> Found total " + this.codesTotal + " products which match the codes within 'koodit.txt'");
-            //         this.log.setItems(this.logLine);
-            //         this.productList.setItems(this.Shipments);
+
         } catch (IOException ioe) {
-            //          this.logLine.add("ERROR IOException: " + ioe.getMessage());
-            //          this.log.setItems(this.logLine);
+            ObservableList<String> LogLine = this.fxController.getLogLine();
+            LogLine.add("IOException error: " + ioe);
+            this.fxController.setLogLine(LogLine);
         } catch (InvalidFormatException ife) {
-            //           this.logLine.add("ERROR InvalidFormatException error: " + ife.getMessage());
-            //           this.log.setItems(this.logLine);
+            ObservableList<String> LogLine = this.fxController.getLogLine();
+            LogLine.add("InvalidFormatExeption error: " + ife);
+            this.fxController.setLogLine(LogLine);
         }
         return this.Shipments;
     }
